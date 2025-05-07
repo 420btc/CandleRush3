@@ -6,11 +6,20 @@ export async function GET() {
     return Response.json(priceData)
   } catch (error) {
     console.error("Error fetching price:", error)
-    // Retornar un error más claro si no se pueden obtener datos reales
+    
+    // Proporcionar un precio simulado como respaldo
+    const simulatedPrice = 60000 + (Math.random() * 2000 - 1000)
+    
+    // Retornar datos simulados pero con una marca clara
     return Response.json({ 
-      error: "No se pudieron obtener datos reales de precio. Por favor, inténtelo más tarde.",
+      price: simulatedPrice,
+      previousPrice: simulatedPrice * 0.98,
+      change: simulatedPrice * 0.02,
+      changePercent: 2.0,
+      timestamp: new Date().toISOString(),
       isReal: false,
-      timestamp: new Date().toISOString()
-    }, { status: 503 }) // 503 Service Unavailable
+      simulatedData: true,
+      error: "Se está utilizando un precio simulado. Por favor, inténtelo más tarde."
+    }, { status: 200 }) // Devolver 200 para que la UI funcione
   }
 }

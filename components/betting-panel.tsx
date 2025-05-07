@@ -30,9 +30,17 @@ export default function BettingPanel() {
       const now = new Date()
       const secondsInCurrentMinute = now.getSeconds()
 
-      // Open betting window in the first 10 seconds of each minute
+      // Abrir ventana de apuestas SOLO en los primeros 10 segundos de cada minuto
       setIsBettingOpen(secondsInCurrentMinute < 10)
-      setCountdown(secondsInCurrentMinute < 10 ? 10 - secondsInCurrentMinute : 60 - secondsInCurrentMinute + 10)
+      
+      // Actualizar contador de tiempo
+      if (secondsInCurrentMinute < 10) {
+        // Tiempo restante para apostar
+        setCountdown(10 - secondsInCurrentMinute)
+      } else {
+        // Tiempo hasta la próxima ventana de apuestas
+        setCountdown(60 - secondsInCurrentMinute + 10)
+      }
     }, 1000)
 
     return () => clearInterval(interval)

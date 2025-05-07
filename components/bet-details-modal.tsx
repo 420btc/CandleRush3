@@ -32,6 +32,15 @@ export default function BetDetailsModal({ bet, isOpen, onClose }: BetDetailsModa
   useEffect(() => {
     // Obtener datos reales de precios para la vela apostada
     if (bet && isOpen) {
+      // Si ya tenemos precios iniciales y finales (para apuestas resueltas), úsalos
+      if (bet.status !== "pending" && bet.initialPrice && bet.finalPrice) {
+        setStartPrice(bet.initialPrice);
+        setEndPrice(bet.finalPrice);
+        setPriceDifference(bet.finalPrice - bet.initialPrice);
+        console.log(`Usando precios guardados: inicial=${bet.initialPrice}, final=${bet.finalPrice}`);
+        return;
+      }
+      
       // Función para obtener los datos de precio actuales
       const fetchPriceData = async () => {
         try {
@@ -224,22 +233,45 @@ export default function BetDetailsModal({ bet, isOpen, onClose }: BetDetailsModa
             <p className="text-xs text-gray-400 mb-2">Datos de la Vela</p>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-gray-900 p-1 rounded">
-                <p className="text-xs text-gray-400">Apertura</p>
+                <p className="text-xs text-gray-400">Precio Inicial</p>
                 {bet.initialPrice ? (
-                  <p className="text-sm font-mono">${bet.initialPrice.toFixed(2)}</p>
+                  <div className="flex flex-col items-center">
+                    <p className="text-sm font-mono font-bold text-white">${bet.initialPrice.toFixed(2)}</p>
+                    <p className="text-[10px] text-blue-400">Apertura de vela</p>
+                    <p className="text-[10px] text-gray-500">{new Date(bet.candleTime).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
+                  </div>
                 ) : (
                   <p className="text-sm font-mono">${startPrice?.toFixed(2) || "..."}</p>
                 )}
               </div>
               <div className="bg-gray-900 p-1 rounded">
-                <p className="text-xs text-gray-400">Cierre</p>
+                <p className="text-xs text-gray-400">Precio Final</p>
                 {bet.status === "pending" ? (
-                  <div className="flex items-center justify-center">
-                    <p className="text-sm font-mono">${endPrice?.toFixed(2) || "..."}</p>
-                    {!isRealData && <span className="ml-1 text-[10px] text-red-400">(caché)</span>}
+                  <div className="flex flex-col items-center">
+                    <p className="text-sm font-mono text-yellow-400">${endPrice?.toFixed(2) || "..."}</p>
+                    <p className="text-[10px] text-yellow-500 animate-pulse">Actualizado</p>
+                    {!isRealData && <span className="text-[10px] text-red-400">(caché)</span>}
                   </div>
                 ) : bet.finalPrice ? (
-                  <p className="text-sm font-mono">${bet.finalPrice.toFixed(2)}</p>
+                  <div className="flex flex-col items-center">
+                    <p className={`text-sm font-mono font-bold ${
+                      bet.finalPrice > (bet.initialPrice || 0) ? "text-green-400" :
+                      bet.finalPrice < (bet.initialPrice || 0) ? "text-red-400" : "text-white"
+                    }`}>
+                      ${bet.finalPrice.toFixed(2)}
+                      {bet.initialPrice && (
+                        <span className="text-[10px] ml-1">
+                          {bet.finalPrice > bet.initialPrice
+                            ? `(+${(bet.finalPrice - bet.initialPrice).toFixed(2)})`
+                            : bet.finalPrice < bet.initialPrice
+                            ? `(-${(bet.initialPrice - bet.finalPrice).toFixed(2)})`
+                            : ""}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-blue-400">Cierre de vela</p>
+                    <p className="text-[10px] text-gray-500">{bet.status === "won" ? "Ganancia" : "Pérdida"}</p>
+                  </div>
                 ) : (
                   <p className="text-sm font-mono">${endPrice?.toFixed(2) || "..."}</p>
                 )}
@@ -247,15 +279,33 @@ export default function BetDetailsModal({ bet, isOpen, onClose }: BetDetailsModa
               <div className="bg-gray-900 p-1 rounded">
                 <p className="text-xs text-gray-400">Diferencia</p>
                 {bet.initialPrice ? (
-                  <p className={`text-sm font-bold ${
-                    priceDifference && priceDifference > 0 ? 'text-green-400' : 
-                    priceDifference && priceDifference < 0 ? 'text-red-400' : 
-                    'text-gray-400'
-                  } ${bet.status === "pending" ? "animate-pulse" : ""}`}>
-                    {priceDifference !== null 
-                      ? `${priceDifference > 0 ? '+' : ''}${priceDifference.toFixed(2)} (${(priceDifference / bet.initialPrice * 100).toFixed(2)}%)`
-                      : "..."}
-                  </p>
+                  <div className="flex flex-col items-center">
+                    <p className={`text-sm font-bold ${
+                      priceDifference && priceDifference > 0 ? 'text-green-400' : 
+                      priceDifference && priceDifference < 0 ? 'text-red-400' : 
+                      'text-gray-400'
+                    } ${bet.status === "pending" ? "animate-pulse" : ""}`}>
+                      {priceDifference !== null 
+                        ? `${priceDifference > 0 ? '+' : ''}${priceDifference.toFixed(2)}`
+                        : "..."}
+                    </p>
+                    {priceDifference !== null && bet.initialPrice && (
+                      <p className={`text-[10px] ${
+                        priceDifference > 0 ? 'text-green-400' : 
+                        priceDifference < 0 ? 'text-red-400' : 
+                        'text-gray-400'
+                      }`}>
+                        ({(priceDifference / bet.initialPrice * 100).toFixed(2)}%)
+                      </p>
+                    )}
+                    {bet.status !== "pending" && (
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Predicción: <span className={bet.status === "won" ? "text-green-400" : "text-red-400"}>
+                          {bet.status === "won" ? "Acertada" : "Fallada"}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm font-mono text-gray-500">Sin datos</p>
                 )}

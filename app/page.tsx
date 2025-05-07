@@ -10,6 +10,7 @@ import SpotTrades from "@/components/spot-trades"
 import Profile from "@/components/profile"
 import WinRateDisplay from "@/components/win-rate-display"
 import MiniChart from "@/components/mini-chart"
+import BetResolutionManager from "@/components/bet-resolution-manager"
 import { useBettingStore } from "@/lib/betting-store"
 import { useEffect, useState } from "react"
 import { ArrowDown, ArrowUp, RefreshCcw } from "lucide-react"
@@ -66,6 +67,9 @@ export default function Home() {
   
   return (
     <main className="min-h-screen bg-black text-white overflow-y-auto">
+      {/* Componente para gestionar modales de resultado de apuestas */}
+      <BetResolutionManager />
+      
       {/* Panel superior de precio fijo */}
       <div className={`w-full py-1.5 px-4 ${isRealData ? 'bg-gradient-to-r from-blue-950 via-blue-900 to-blue-950' : 'bg-gradient-to-r from-red-950 via-red-900 to-red-950'} shadow-md border-b border-blue-800 flex items-center justify-between`}>
         <div className="flex items-center gap-3">
