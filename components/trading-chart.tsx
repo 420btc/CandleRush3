@@ -483,24 +483,6 @@ export default function TradingChart() {
             </Badge>
           </div>
           
-          {/* Precio de Bitcoin centralizado y más grande */}
-          <div className="absolute left-1/2 top-0 transform -translate-x-1/2 z-10">
-            {currentPrice && (
-              <div className={`rounded-lg ${isRealData ? 'bg-blue-900/70 border-blue-800' : 'bg-red-900/70 border-red-800'} px-3 py-1.5 shadow-glow border`}>
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-bold text-yellow-400">
-                    ${currentPrice.toFixed(2)}
-                    {!isRealData && <span className="ml-1 text-xs text-red-300 align-top">(caché)</span>}
-                  </span>
-                  <span className={`text-xs font-medium ${priceChange >= 0 ? "text-green-500" : "text-red-500"}`}>
-                    {priceChange >= 0 ? <ArrowUp className="inline h-3 w-3 mr-1" /> : <ArrowDown className="inline h-3 w-3 mr-1" />}
-                    {Math.abs(priceChange).toFixed(2)} ({priceChangePercent.toFixed(2)}%)
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-          
           <div className="flex items-center gap-2">
             <div
               className={`rounded-lg px-2 py-0.5 text-xs font-medium ${
