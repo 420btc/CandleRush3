@@ -2,9 +2,9 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowDown, ArrowUp, Info, Trash2 } from "lucide-react"
+import { ArrowDown, ArrowUp, Info, RefreshCw, Trash2 } from "lucide-react"
 import { useBettingStore, type Bet } from "@/lib/betting-store"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import BetDetailsModal from "./bet-details-modal"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
@@ -13,7 +13,30 @@ export default function BetHistory() {
   const { bets, deleteBet } = useBettingStore()
   const [selectedBet, setSelectedBet] = useState<Bet | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [localBets, setLocalBets] = useState<Bet[]>([])
   const { toast } = useToast()
+  
+  // Utilizar una copia local de las apuestas para asegurar renderizado correcto
+  useEffect(() => {
+    setLocalBets(bets);
+    
+    // También verificar si hay apuestas en localStorage que no se hayan cargado
+    try {
+      const storedData = localStorage.getItem("betting-store");
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        if (parsed.state && parsed.state.bets && parsed.state.bets.length > 0) {
+          if (parsed.state.bets.length !== bets.length) {
+            console.log("Detectadas diferencias entre localStorage y estado actual");
+            // Forzar actualización (en una aplicación real, habría que hacer merge)
+            setLocalBets(parsed.state.bets);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error cargando apuestas desde localStorage:", e);
+    }
+  }, [bets]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
@@ -35,6 +58,9 @@ export default function BetHistory() {
     
     deleteBet(bet.id)
     
+    // Actualizar también la lista local para asegurar actualización UI
+    setLocalBets(prev => prev.filter(b => b.id !== bet.id));
+    
     toast({
       title: "Apuesta eliminada",
       description: bet.status === "pending" 
@@ -43,15 +69,48 @@ export default function BetHistory() {
       variant: "default"
     })
   }
+  
+  // Función para forzar recarga de apuestas desde localStorage
+  const forceRefreshFromStorage = () => {
+    try {
+      const storedData = localStorage.getItem("betting-store");
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        if (parsed.state && parsed.state.bets) {
+          setLocalBets(parsed.state.bets);
+          toast({
+            title: "Lista actualizada",
+            description: `Se cargaron ${parsed.state.bets.length} apuestas desde almacenamiento`,
+            variant: "default"
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Error recargando apuestas:", e);
+      toast({
+        title: "Error",
+        description: "No se pudieron recargar las apuestas",
+        variant: "destructive"
+      });
+    }
+  }
 
   return (
     <Card className="h-full border-blue-900 bg-gray-900">
       <CardContent className="p-0 h-full flex flex-col">
-        <div className="border-b border-blue-900 bg-gray-800 bg-opacity-50 p-3">
+        <div className="border-b border-blue-900 bg-gray-800 bg-opacity-50 p-3 flex justify-between items-center">
           <h3 className="text-lg font-bold text-white">Historial de Apuestas</h3>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={forceRefreshFromStorage}
+            className="h-6 w-6 text-blue-400 hover:text-blue-300"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
-        {bets.length === 0 ? (
+        {localBets.length === 0 ? (
           <div className="flex flex-grow items-center justify-center text-gray-500">
             <p>No hay apuestas todavía</p>
           </div>
@@ -70,7 +129,7 @@ export default function BetHistory() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800 text-sm text-white">
-                {bets.map((bet) => (
+                {localBets.map((bet) => (
                   <tr 
                     key={bet.id} 
                     className="hover:bg-gray-800 cursor-pointer" 

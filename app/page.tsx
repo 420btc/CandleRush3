@@ -22,6 +22,16 @@ export default function Home() {
   const [isRealData, setIsRealData] = useState<boolean>(true)
   const [lastUpdate, setLastUpdate] = useState<string>("")
 
+  // Verificar que las apuestas se hayan cargado correctamente al iniciar la aplicación
+  useEffect(() => {
+    // Disparar evento para actualizar gráfico con apuestas guardadas
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("update-tradingview-markers"));
+      }, 2000); // Dar tiempo a que se carguen todos los componentes
+    }
+  }, []);
+
   // Obtener precio de Bitcoin para el header
   useEffect(() => {
     const fetchBitcoinPrice = async () => {

@@ -91,9 +91,12 @@ export default function BettingPanel() {
       setTimeout(() => setIsDownBetting(false), 500)
     }
 
+    // Crear un ID único con timestamp y random para evitar colisiones
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
     // Place the bet
     placeBet({
-      id: Date.now().toString(),
+      id: uniqueId,
       amount: betAmount,
       leverage: leverage,
       direction: direction,
@@ -113,6 +116,15 @@ export default function BettingPanel() {
 
     // Trigger an event to update chart markers immediately
     window.dispatchEvent(new CustomEvent(CHART_EVENT));
+    
+    // También disparar el evento después de un breve retraso 
+    // para asegurar que todo se haya sincronizado
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent(CHART_EVENT));
+      
+      // Forzar actualización del DOM para asegurar que la pestaña Bets muestre las apuestas
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, 500);
   }
 
   return (
